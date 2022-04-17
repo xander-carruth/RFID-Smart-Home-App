@@ -59,28 +59,28 @@ class PreferencesForm(FlaskForm):
     
     app1 = SelectField(
         'Application 1',
-        choices=[(True, 'Yes'), (False, 'No')],
+        choices=[('Yes', 'Yes'), ('No', 'No')],
         validators=[
             DataRequired()
         ]
     )
     app2 = SelectField(
         'Application 2',
-        choices=[(True, 'Yes'), (False, 'No')],
+        choices=[('Yes', 'Yes'), ('No', 'No')],
         validators=[
             DataRequired()
         ]
     )
     app3 = SelectField(
         'Application 3',
-        choices=[(True, 'Yes'), (False, 'No')],
+        choices=[('Yes', 'Yes'), ('No', 'No')],
         validators=[
             DataRequired()
         ]
     )
     app4 = SelectField(
         'Application 4',
-        choices=[(True, 'Yes'), (False, 'No')],
+        choices=[('Yes', 'Yes'), ('No', 'No')],
         validators=[
             DataRequired()
         ]

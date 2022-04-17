@@ -52,6 +52,8 @@ def landingpage():
                 preferences.app3 = form.app3.data
                 preferences.app4 = form.app4.data
                 db.session.commit()
+                print(current_user.preferences, file=sys.stderr)
+                print(preferences, file=sys.stderr)
             return render_template(
                 "static.html",
                 form=form
@@ -137,10 +139,8 @@ def nfc_update():
         current_nfc = request.form.get("nfc_var")
         print(current_nfc, file=sys.stderr)
 
-    print(current_nfc, file=sys.stderr)
-    print(request.form, file=sys.stderr)
+
     if(request.form.get("submit") != None):
-        print("This was reached", file=sys.stderr)
         print(current_nfc, file=sys.stderr)
     if(request.form.get("submit") == "submit" and len(current_nfc) > 5):
         user = User.query.get(current_user.id)
@@ -148,10 +148,9 @@ def nfc_update():
         preferences = Preferences(app1=True, app2=True, app3=True, app4=True, user=user)
         user.preferences = preferences
         db.session.add(preferences)
-        print(current_user.preferences, file=sys.stderr)
-        print(preferences, file=sys.stderr)
+        # print(current_user.preferences, file=sys.stderr)
+        # print(preferences, file=sys.stderr)
         db.session.commit()
-        print("This was also reached", file=sys.stderr)
         return redirect(url_for('landingpage'))
     else:
         return render_template(
