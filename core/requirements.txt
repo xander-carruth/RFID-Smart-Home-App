@@ -1,0 +1,12 @@
+pytest
+Flask
+Flask-Login
+Flask-SQLAlchemy
+Flask-WTF
+Flask-Session
+coverage
+requests
+redis
+python-dotenv
+psycopg2-binary
+email_validator

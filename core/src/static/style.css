@@ -1,0 +1,17 @@
+.profile-img
+{
+width: 500px;
+height: 650px;
+}
+.navi-right
+{
+text-align: right;
+display: block;
+float: right;
+}
+.navi-left
+{
+text-align: left;
+display: block;
+float: left;
+}
