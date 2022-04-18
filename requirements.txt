@@ -8,3 +8,4 @@ requests
 redis
 Werkzeug
 WTForms
+wiotp-sdk
