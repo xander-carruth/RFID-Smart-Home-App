@@ -7,7 +7,13 @@ from . import create_app, db, login_manager
 from .models import User, Preferences
 from .forms import SignupForm, LoginForm, PreferencesForm
 import sys
+import time
+import wiotp.sdk.application
 
+client = None
+
+def publishEventCallback():
+    print("Published.")
 
 
 try:
@@ -54,6 +60,22 @@ def landingpage():
                 db.session.commit()
                 print(current_user.preferences, file=sys.stderr)
                 print(preferences, file=sys.stderr)
+
+                try:
+                    print("Beginning")
+                    options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
+                    client = wiotp.sdk.application.ApplicationClient(config=options)
+                    client.connect()
+                    print("Connection established")
+                    eventData = {'Preferences': preferences}
+                    client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
+                                        data=eventData,
+                                        onPublish=publishEventCallback)
+                    print("Published Data")
+                    time.sleep(5)
+                except Exception as e:
+                    print("Exception: ", e)
+
             return render_template(
                 "static.html",
                 form=form
