@@ -10,3 +10,4 @@ redis
 python-dotenv
 psycopg2-binary
 email_validator
+wiotp-sdk

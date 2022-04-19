@@ -8,13 +8,38 @@ from .models import User, Preferences
 from .forms import SignupForm, LoginForm, PreferencesForm
 import sys
 import time
+import json
 import wiotp.sdk.application
+from threading import Thread
 
 client = None
 
 def publishEventCallback():
     print("Published.")
 
+def subscribeEventCallback(evt):
+    print("This is being reached", sys.stderr)
+    payload = json.dumps(evt.data).strip("{\" }").replace('"','').split(":")
+    print(payload, file=sys.stderr)
+
+def runSubscriber():
+    def subscribeToUser():
+
+        not_started = True
+        while not_started:
+            print("This was reached", file=sys.stderr)
+            try:
+                options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
+                client = wiotp.sdk.application.ApplicationClient(config=options)
+                client.connect()
+                print("Connection established", file=sys.stderr)
+                client.subscribeToDeviceEvents(eventId="doorStatus")
+                client.deviceEventCallback = subscribeEventCallback
+            except Exception as e:
+                print("Exception: ", e, file=sys.stderr)
+            time.sleep(2)
+    thread = Thread(target = subscribeToUser, args = ())
+    thread.start()
 
 try:
     app = create_app()
@@ -44,6 +69,19 @@ def unauthorized():
     flash('You must be logged in to view that page.')
     return redirect(url_for('login'))
 
+@app.before_first_request
+def testingThis():
+    print("This was reached", file=sys.stderr)
+    try:
+        options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
+        client = wiotp.sdk.application.ApplicationClient(config=options)
+        client.connect()
+        print("Connection established", file=sys.stderr)
+        client.subscribeToDeviceEvents(eventId="doorStatus")
+        client.deviceEventCallback = subscribeEventCallback
+    except Exception as e:
+        print("Exception: ", e, file=sys.stderr)
+
 @app.route('/', methods=['GET', 'POST'])
 def landingpage():
     print("Landing was reached", file=sys.stderr)
@@ -66,15 +104,15 @@ def landingpage():
                     options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
                     client = wiotp.sdk.application.ApplicationClient(config=options)
                     client.connect()
-                    print("Connection established")
-                    eventData = {'Preferences': preferences}
+                    print("Connection established", file=sys.stderr)
+                    eventData = {'Preferences': repr(preferences)}
                     client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
-                                        data=eventData,
-                                        onPublish=publishEventCallback)
-                    print("Published Data")
+                                        data=eventData, onPublish=publishEventCallback, retained=True)
+                    print("Published Data", file=sys.stderr)
                     time.sleep(5)
+                    client.disconnect()
                 except Exception as e:
-                    print("Exception: ", e)
+                    print("Exception: ", e, file=sys.stderr)
 
             return render_template(
                 "static.html",
@@ -199,4 +237,9 @@ if __name__ == "main":
     app.config['SESSION_TYPE'] = 'memcache'
     sess = Session()
     sess.init_app(app)
-    app.run()
+    runSubscriber()
+
+    app.run(threaded=True)
+    
+
+
