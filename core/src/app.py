@@ -18,28 +18,8 @@ def publishEventCallback():
     print("Published.")
 
 def subscribeEventCallback(evt):
-    print("This is being reached", sys.stderr)
     payload = json.dumps(evt.data).strip("{\" }").replace('"','').split(":")
-    print(payload, file=sys.stderr)
-
-def runSubscriber():
-    def subscribeToUser():
-
-        not_started = True
-        while not_started:
-            print("This was reached", file=sys.stderr)
-            try:
-                options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
-                client = wiotp.sdk.application.ApplicationClient(config=options)
-                client.connect()
-                print("Connection established", file=sys.stderr)
-                client.subscribeToDeviceEvents(eventId="doorStatus")
-                client.deviceEventCallback = subscribeEventCallback
-            except Exception as e:
-                print("Exception: ", e, file=sys.stderr)
-            time.sleep(2)
-    thread = Thread(target = subscribeToUser, args = ())
-    thread.start()
+    # print(payload, file=sys.stderr)
 
 try:
     app = create_app()
@@ -70,8 +50,7 @@ def unauthorized():
     return redirect(url_for('login'))
 
 @app.before_first_request
-def testingThis():
-    print("This was reached", file=sys.stderr)
+def startSubscriber():
     try:
         options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
         client = wiotp.sdk.application.ApplicationClient(config=options)
@@ -84,7 +63,6 @@ def testingThis():
 
 @app.route('/', methods=['GET', 'POST'])
 def landingpage():
-    print("Landing was reached", file=sys.stderr)
     if current_user.is_authenticated:
         if current_user.nfc_id != None:
             form = PreferencesForm(obj=current_user.preferences)
@@ -101,10 +79,6 @@ def landingpage():
 
                 try:
                     print("Beginning")
-                    options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
-                    client = wiotp.sdk.application.ApplicationClient(config=options)
-                    client.connect()
-                    print("Connection established", file=sys.stderr)
                     eventData = {'Preferences': repr(preferences)}
                     client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
                                         data=eventData, onPublish=publishEventCallback, retained=True)
@@ -237,8 +211,6 @@ if __name__ == "main":
     app.config['SESSION_TYPE'] = 'memcache'
     sess = Session()
     sess.init_app(app)
-    runSubscriber()
-
     app.run(threaded=True)
     
 

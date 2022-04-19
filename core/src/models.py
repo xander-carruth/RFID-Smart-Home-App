@@ -84,7 +84,7 @@ class Preferences(db.Model):
         Integer,
         ForeignKey('user.id')
     )
-    _user = relationship("User", uselist=False)
+    _user = relationship("User", uselist=False, overlaps="preferences,user")
     def __repr__(self):
         # return '\{app1:"{}",app2:"{}",app3:"{}",app4:"{}"\}'.format(self.app1, self.app2, self.app3, self.app4)
         return '{{{{app1:\"{}\"}}, {{app2:\"{}\"}}, {{app3:\"{}\"}}, {{app4:\"{}\"}}}}'.format(self.app1, self.app2, self.app3, self.app4)
