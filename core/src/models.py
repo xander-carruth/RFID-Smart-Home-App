@@ -37,7 +37,7 @@ class User(db.Model, UserMixin):
         nullable=False
     )
 
-    preferences = relationship("Preferences", backref="user", uselist=False)
+    preferences = relationship("Preferences", backref="user", uselist=False, lazy='subquery')
 
     def set_password(self, password):
         """Create hashed password."""
@@ -51,7 +51,7 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return self
 
 class Preferences(db.Model):
     __tablename__ = 'preferences'
@@ -87,4 +87,4 @@ class Preferences(db.Model):
     _user = relationship("User", uselist=False, overlaps="preferences,user")
     def __repr__(self):
         # return '\{app1:"{}",app2:"{}",app3:"{}",app4:"{}"\}'.format(self.app1, self.app2, self.app3, self.app4)
-        return '{{{{app1:\"{}\"}}, {{app2:\"{}\"}}, {{app3:\"{}\"}}, {{app4:\"{}\"}}}}'.format(self.app1, self.app2, self.app3, self.app4)
+        return '{{app1:\"{}\", app2:\"{}\", app3:\"{}\", app4:\"{}\"}}'.format(self.app1, self.app2, self.app3, self.app4)

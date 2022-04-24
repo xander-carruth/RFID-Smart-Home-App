@@ -25,11 +25,10 @@
     //         });
     //         });
     $(function () {
-        $("a#test").click(function () {
+        $("a#pair").click(function () {
             $.ajax({
                 type: "POST",
                 url: "/settings",
-                data: {nfc_var: "testerers"},
                 success: function (response) {
                     $("html").html(response);
                 }
@@ -80,6 +79,6 @@
 
 
 {% block content %}
-<p>NFC ID: {{nfc_var}} <a href=# id=test><button class='btn btn-default'>Pair</button></a></p>
+<p>NFC ID: {{nfc_var}} <a href=# id=pair><button class='btn btn-default'>Pair</button></a></p>
 <a href=# id=submit><button class='btn btn-default'>Submit</button></a>
 {% endblock %}

@@ -4,6 +4,7 @@ Flask-Login
 Flask-SQLAlchemy
 Flask-WTF
 Flask-Session
+Flask-APScheduler
 coverage
 requests
 redis

@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, redirect, flash, request, session, url_for
 from flask_session import Session
 from flask_login import current_user, logout_user, login_user, login_required
+from flask_apscheduler import APScheduler
 from redis import Redis
 from . import create_app, db, login_manager
 from .models import User, Preferences
@@ -11,15 +12,44 @@ import time
 import json
 import wiotp.sdk.application
 from threading import Thread
+from datetime import datetime, timedelta
 
+nfc_val = None
+global scheduler
 client = None
 
 def publishEventCallback():
     print("Published.")
 
+def clearNFCVal():
+    global nfc_val
+    nfc_val = None
+
 def subscribeEventCallback(evt):
-    payload = json.dumps(evt.data).strip("{\" }").replace('"','').split(":")
-    # print(payload, file=sys.stderr)
+    global client
+    global nfc_val
+    global scheduler
+    payload = evt.data
+    nfc_arr = payload["User"]
+    nfc_id = ' '.join(map(str, nfc_arr))
+    print(nfc_id, file=sys.stderr)
+    with app.app_context():
+        user_pref = User.query.filter_by(nfc_id=nfc_id).first()
+    if(user_pref != None):
+        print(user_pref.name, file=sys.stderr)
+        preferences = user_pref.preferences
+        try:
+            print("Beginning")
+            eventData = {'Preferences': repr(preferences)}
+            client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
+                                data=eventData, onPublish=publishEventCallback)
+            print("Published Data", file=sys.stderr)
+        except Exception as e:
+            print("Exception: ", e, file=sys.stderr)
+    else:
+        nfc_val = nfc_id
+        future_time = datetime.now() + timedelta(minutes=1)
+        scheduler.add_job(func=clearNFCVal, trigger='date', run_date=future_time, id=None)
 
 try:
     app = create_app()
@@ -51,6 +81,7 @@ def unauthorized():
 
 @app.before_first_request
 def startSubscriber():
+    global client
     try:
         options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
         client = wiotp.sdk.application.ApplicationClient(config=options)
@@ -60,6 +91,12 @@ def startSubscriber():
         client.deviceEventCallback = subscribeEventCallback
     except Exception as e:
         print("Exception: ", e, file=sys.stderr)
+
+@app.before_first_request
+def startScheduler():
+    global scheduler
+    scheduler = APScheduler()
+    scheduler.start()
 
 @app.route('/', methods=['GET', 'POST'])
 def landingpage():
@@ -76,17 +113,6 @@ def landingpage():
                 db.session.commit()
                 print(current_user.preferences, file=sys.stderr)
                 print(preferences, file=sys.stderr)
-
-                try:
-                    print("Beginning")
-                    eventData = {'Preferences': repr(preferences)}
-                    client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
-                                        data=eventData, onPublish=publishEventCallback, retained=True)
-                    print("Published Data", file=sys.stderr)
-                    time.sleep(5)
-                    client.disconnect()
-                except Exception as e:
-                    print("Exception: ", e, file=sys.stderr)
 
             return render_template(
                 "static.html",
@@ -162,6 +188,7 @@ def login():
 @app.route("/settings", methods=['GET', 'POST'])
 @login_required
 def nfc_update():
+    global nfc_val
     global current_nfc
 
     if(request.form.get("submit") == None):
@@ -169,9 +196,12 @@ def nfc_update():
             current_nfc = current_user.nfc_id
         else:
             current_nfc = "None"
-    if(request.form.get("nfc_var")!=None):
-        current_nfc = request.form.get("nfc_var")
-        print(current_nfc, file=sys.stderr)
+    # if(request.form.get("nfc_var")!=None):
+    #     current_nfc = request.form.get("nfc_var")
+    #     print(current_nfc, file=sys.stderr)
+    if(nfc_val != None):
+        current_nfc = nfc_val
+        nfc_val = None
 
 
     if(request.form.get("submit") != None):
@@ -203,15 +233,10 @@ def logout():
     logout_user()
     return redirect(url_for('landingpage'))
 
-@app.route('/background_process_test', methods=['GET', 'POST'])
-def background_process_test():
-    return redirect(url_for('nfc_update', nfc_var="squiggly"))
 count = 0
 if __name__ == "main":
     app.config['SESSION_TYPE'] = 'memcache'
     sess = Session()
     sess.init_app(app)
     app.run(threaded=True)
-    
-
 
