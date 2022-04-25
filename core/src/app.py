@@ -32,7 +32,7 @@ def subscribeEventCallback(evt):
     payload = evt.data
     nfc_arr = payload["User"]
     nfc_id = ' '.join(map(str, nfc_arr))
-    print(nfc_id, file=sys.stderr)
+    print(nfc_id, sys.stderr)
     with app.app_context():
         user_pref = User.query.filter_by(nfc_id=nfc_id).first()
     if(user_pref != None):
@@ -106,6 +106,8 @@ def landingpage():
             if form.validate_on_submit():
                 user = User.query.get(current_user.id)
                 preferences = user.preferences
+                print(form.app1.data, file=sys.stderr)
+                print(form.app2.data, file=sys.stderr)
                 preferences.app1 = form.app1.data
                 preferences.app2 = form.app2.data
                 preferences.app3 = form.app3.data
@@ -216,13 +218,23 @@ def nfc_update():
         # print(preferences, file=sys.stderr)
         db.session.commit()
         return redirect(url_for('landingpage'))
+    elif(request.form.get("submit") == "submit"):
+        return render_template(
+            'settings.html',
+            title='Settings',
+            template='settings-page',
+            body="Update your NFC ID",
+            nfc_var=current_nfc,
+            err_text="Pairing failed"
+        )
     else:
         return render_template(
             'settings.html',
             title='Settings',
             template='settings-page',
             body="Update your NFC ID",
-            nfc_var=current_nfc
+            nfc_var=current_nfc,
+            err_text=""
         )
 
 

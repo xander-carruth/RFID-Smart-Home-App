@@ -14,16 +14,6 @@
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script type=text/javascript>
-    //         $(function() {
-    //         $('a#test').on('click', function(e) {
-    //             // e.preventDefault()
-    //             $.getJSON('/background_process_test',
-    //             function(data) {
-    //                 window.location.href = "/logout";
-    //             });
-    //             return false;
-    //         });
-    //         });
     $(function () {
         $("a#pair").click(function () {
             $.ajax({
@@ -42,8 +32,8 @@
                 type: "POST",
                 url: "/settings",
                 data: {submit: "submit"},
-                success: function (response) {
-                    alert(response);
+                success: function (response, data) {
+                    alert("Submitted");
                     $("html").html(response);
                 }
 
@@ -54,7 +44,7 @@
     // </script>
 </head>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: aliceblue;">
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: rgb(211, 225, 237) !important;">
     <a class="navbar-brand" href="./">CSC791 Final Project</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,6 +69,8 @@
 
 
 {% block content %}
-<p>NFC ID: {{nfc_var}} <a href=# id=pair><button class='btn btn-default'>Pair</button></a></p>
-<a href=# id=submit><button class='btn btn-default'>Submit</button></a>
+<div class="settings">
+    <p>&emsp;&emsp;NFC ID: {{nfc_var}} <a href=# id=pair><button class='btn btn-outline-primary'>Pair</button></a></p>
+    <p>&emsp;&emsp;<a href=# id=submit><button class='btn btn-primary'>Submit</button></a></p>
+</div>
 {% endblock %}
