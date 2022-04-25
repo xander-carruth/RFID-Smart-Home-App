@@ -29,7 +29,7 @@
             {% endif %}
             </div> -->
         <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: rgb(211, 225, 237) !important;">
-            <a class="navbar-brand" href="./">CSC791 Final Project</a>
+            <a class="navbar-brand" href="{{ url_for('landingpage') }}">CSC791 Final Project</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -46,7 +46,7 @@
             <td>
                 <div>
                     {% if current_user.is_authenticated %}
-                    <p><a href="{{ url_for('nfc_update') }}">Settings</a>&emsp;&emsp;<a href="{{ url_for('logout') }}">Logout</a></p>
+                    <p><a href="{{ url_for('nfc_update',nfc_var='None') }}">Settings</a>&emsp;&emsp;<a href="{{ url_for('logout') }}">Logout</a></p>
                     {% else %}
                     <p><a href="{{ url_for('login') }}">Login</a>&emsp; &emsp;<a href="{{ url_for('signup') }}">Sign
                             up</a>&emsp;</p>

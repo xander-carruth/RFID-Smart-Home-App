@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, flash, request, session, url_for
+from flask import Flask, render_template, redirect, flash, request, session, url_for, jsonify
 from flask_session import Session
 from flask_login import current_user, logout_user, login_user, login_required
 from flask_apscheduler import APScheduler
@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 nfc_val = None
 global scheduler
 client = None
+current_nfc = "None"
 
 def publishEventCallback():
     print("Published.")
@@ -39,7 +40,7 @@ def subscribeEventCallback(evt):
         print(user_pref.name, file=sys.stderr)
         preferences = user_pref.preferences
         try:
-            print("Beginning")
+            print(preferences, file=sys.stderr)
             eventData = {'Preferences': repr(preferences)}
             client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
                                 data=eventData, onPublish=publishEventCallback)
@@ -121,7 +122,7 @@ def landingpage():
                 form=form
             )
         else:
-            return redirect(url_for('nfc_update'))
+            return redirect(url_for('nfc_update', nfc_var="None"))
     else:
         return render_template(
             "static.html"
@@ -150,10 +151,7 @@ def signup():
         flash('A user already exists with that email address.')
     return render_template(
         'signup.html',
-        title='Create an Account.',
-        form=form,
-        template='signup-page',
-        body="Sign up for a user account."
+        form=form
     )
 
 
@@ -182,26 +180,27 @@ def login():
     return render_template(
         'login.html',
         form=form,
-        title='Log in.',
-        template='login-page',
         body="Log in with your User account."
     )
 
-@app.route("/settings", methods=['GET', 'POST'])
+@app.route("/settings/<nfc_var>", methods=['GET', 'POST'])
 @login_required
-def nfc_update():
+def nfc_update(nfc_var):
     global nfc_val
     global current_nfc
 
     if(request.form.get("submit") == None):
         if(current_user.nfc_id != None):
             current_nfc = current_user.nfc_id
-        else:
+        elif(nfc_var=="None"):
             current_nfc = "None"
+        else:
+            print(current_nfc, file=sys.stderr)
+
     # if(request.form.get("nfc_var")!=None):
     #     current_nfc = request.form.get("nfc_var")
     #     print(current_nfc, file=sys.stderr)
-    if(nfc_val != None):
+    if(nfc_val != None and request.form.get("pair")=="pair"):
         current_nfc = nfc_val
         nfc_val = None
 
@@ -217,24 +216,17 @@ def nfc_update():
         # print(current_user.preferences, file=sys.stderr)
         # print(preferences, file=sys.stderr)
         db.session.commit()
-        return redirect(url_for('landingpage'))
-    elif(request.form.get("submit") == "submit"):
-        return render_template(
-            'settings.html',
-            title='Settings',
-            template='settings-page',
-            body="Update your NFC ID",
-            nfc_var=current_nfc,
-            err_text="Pairing failed"
-        )
+        return jsonify({'redirect': url_for("landingpage")})
+    elif(request.form.get("submit") == "submit" or request.form.get("pair") == "pair"):
+        return jsonify({'redirect': url_for("nfc_update", nfc_var=current_nfc)})
+        # return render_template(
+        #     'settings.html',
+        #     nfc_var=current_nfc
+        # )
     else:
         return render_template(
             'settings.html',
-            title='Settings',
-            template='settings-page',
-            body="Update your NFC ID",
-            nfc_var=current_nfc,
-            err_text=""
+            nfc_var=current_nfc
         )
 
 

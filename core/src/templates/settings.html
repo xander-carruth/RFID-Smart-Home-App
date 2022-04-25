@@ -18,9 +18,10 @@
         $("a#pair").click(function () {
             $.ajax({
                 type: "POST",
-                url: "/settings",
+                url: "/settings/None",
+                data: {pair: "pair"},
                 success: function (response) {
-                    $("html").html(response);
+                    window.location.href = response.redirect;
                 }
 
             });
@@ -30,11 +31,10 @@
         $("a#submit").click(function () {
             $.ajax({
                 type: "POST",
-                url: "/settings",
+                url: "/settings/Sub",
                 data: {submit: "submit"},
-                success: function (response, data) {
-                    alert("Submitted");
-                    $("html").html(response);
+                success: function (response) {
+                    window.location.href = response.redirect;
                 }
 
             });
@@ -45,7 +45,7 @@
 </head>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: rgb(211, 225, 237) !important;">
-    <a class="navbar-brand" href="./">CSC791 Final Project</a>
+    <a class="navbar-brand" href="{{ url_for('landingpage') }}">CSC791 Final Project</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
