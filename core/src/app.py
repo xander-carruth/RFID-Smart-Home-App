@@ -88,7 +88,7 @@ def startSubscriber():
         client = wiotp.sdk.application.ApplicationClient(config=options)
         client.connect()
         print("Connection established", file=sys.stderr)
-        client.subscribeToDeviceEvents(eventId="doorStatus")
+        client.subscribeToDeviceEvents(eventId="userTag")
         client.deviceEventCallback = subscribeEventCallback
     except Exception as e:
         print("Exception: ", e, file=sys.stderr)
