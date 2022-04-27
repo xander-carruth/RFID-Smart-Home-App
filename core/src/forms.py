@@ -1,5 +1,5 @@
 """
-This package provides login and signup forms for the website
+This package provides the login, signup, and preference forms for the website
 """
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, PasswordField, SubmitField
@@ -56,7 +56,6 @@ class LoginForm(FlaskForm):
 
 class PreferencesForm(FlaskForm):
     """User Preferences Form."""
-    
     app1 = SelectField(
         'Application 1',
         choices=[('Yes', 'Yes'), ('No', 'No')],

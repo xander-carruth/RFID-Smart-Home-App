@@ -14,6 +14,7 @@
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script type=text/javascript>
+    // Ajax script to call for pairing to NFC ID
     $(function () {
         $("a#pair").click(function () {
             $.ajax({
@@ -27,6 +28,7 @@
             });
         });
     });
+    // Ajax script for saving paired NFC ID
     $(function () {
         $("a#submit").click(function () {
             $.ajax({

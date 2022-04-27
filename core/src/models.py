@@ -55,6 +55,10 @@ class User(db.Model, UserMixin):
         return self
 
 class Preferences(db.Model):
+    """
+    Preferences class is a model for preferences in the database
+    """
+
     __tablename__ = 'preferences'
     id = db.Column(
         db.Integer,

@@ -20,27 +20,29 @@ client = None
 current_nfc = "None"
 
 def publishEventCallback():
+    """Print published when preferences are published"""
     print("Published.")
 
 def clearNFCVal():
+    """Clear NFC_val after 60 seconds"""
     global nfc_val
     nfc_val = None
 
 def subscribeEventCallback(evt):
+    """Add to pairing variable if it is not paired to an ID, otherwise publish preferences associated with ID"""
     global client
     global nfc_val
     global scheduler
     payload = evt.data
     nfc_arr = payload["User"]
     nfc_id = ' '.join(map(str, nfc_arr))
-    print(nfc_id, sys.stderr)
+    # Check if NFC ID is in database
     with app.app_context():
         user_pref = User.query.filter_by(nfc_id=nfc_id).first()
+    # Publish user preferences is user is found
     if(user_pref != None):
-        print(user_pref.name, file=sys.stderr)
         preferences = user_pref.preferences
         try:
-            print(preferences, file=sys.stderr)
             eventData = {'Preferences': repr(preferences)}
             client.publishEvent(typeId="RaspberryPi", deviceId="1", eventId="preferences", msgFormat="json",
                                 data=eventData, onPublish=publishEventCallback)
@@ -50,8 +52,10 @@ def subscribeEventCallback(evt):
     else:
         nfc_val = nfc_id
         future_time = datetime.now() + timedelta(minutes=1)
+        # Start job to clear our the NFC ID after 60 seconds
         scheduler.add_job(func=clearNFCVal, trigger='date', run_date=future_time, id=None)
 
+"""Create the app"""
 try:
     app = create_app()
     app.secret_key = "thekey"
@@ -82,6 +86,7 @@ def unauthorized():
 
 @app.before_first_request
 def startSubscriber():
+    """Start subscriber to userTag channel before app starts"""
     global client
     try:
         options = wiotp.sdk.application.parseConfigFile("webApp.yaml")
@@ -95,27 +100,25 @@ def startSubscriber():
 
 @app.before_first_request
 def startScheduler():
+    """Start APScheduler before app starts for clearing the NFC ID"""
     global scheduler
     scheduler = APScheduler()
     scheduler.start()
 
 @app.route('/', methods=['GET', 'POST'])
 def landingpage():
+    """Landing page with preference form is user is authenticated and has NFC ID associated"""
     if current_user.is_authenticated:
         if current_user.nfc_id != None:
             form = PreferencesForm(obj=current_user.preferences)
             if form.validate_on_submit():
                 user = User.query.get(current_user.id)
                 preferences = user.preferences
-                print(form.app1.data, file=sys.stderr)
-                print(form.app2.data, file=sys.stderr)
                 preferences.app1 = form.app1.data
                 preferences.app2 = form.app2.data
                 preferences.app3 = form.app3.data
                 preferences.app4 = form.app4.data
                 db.session.commit()
-                print(current_user.preferences, file=sys.stderr)
-                print(preferences, file=sys.stderr)
 
             return render_template(
                 "static.html",
@@ -130,11 +133,7 @@ def landingpage():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    """
-    User sign-up page.
-    GET requests serve sign-up page.
-    POST requests validate form & user creation.
-    """
+    """User signup page"""
     form = SignupForm()
     if form.validate_on_submit():
         existing_user = User.query.filter_by(email=form.email.data).first()
@@ -157,11 +156,7 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """
-    Log-in page for registered users.
-    GET requests serve Log-in page.
-    POST requests validate and redirect user to dashboard.
-    """
+    """User login page"""
     # Bypass if user is logged in
     if current_user.is_authenticated:
         return redirect(url_for('landingpage'))
@@ -172,8 +167,6 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(password=form.password.data):
             login_user(user)
-            # next_page = request.args.get('next')
-            # return redirect(next_page or url_for('landingpage'))
             return redirect(url_for('landingpage'))
         flash('Invalid username/password combination')
         return redirect(url_for('login'))
@@ -186,49 +179,42 @@ def login():
 @app.route("/settings/<nfc_var>", methods=['GET', 'POST'])
 @login_required
 def nfc_update(nfc_var):
+    """
+    Settings page
+    GET displays current saved NFC ID
+    POST pairs NFC ID and saves NFC ID and default User preferences on submit
+    """
     global nfc_val
     global current_nfc
 
+    # If it is being paired and nfc_id is nfc_var is none, current_nfc is none
     if(request.form.get("submit") == None):
         if(current_user.nfc_id != None):
             current_nfc = current_user.nfc_id
         elif(nfc_var=="None"):
             current_nfc = "None"
-        else:
-            print(current_nfc, file=sys.stderr)
 
-    # if(request.form.get("nfc_var")!=None):
-    #     current_nfc = request.form.get("nfc_var")
-    #     print(current_nfc, file=sys.stderr)
+    # If there is a recently sent NFC_ID, set the nfc_id displayed on the page to the id
     if(nfc_val != None and request.form.get("pair")=="pair"):
         current_nfc = nfc_val
         nfc_val = None
 
-
-    if(request.form.get("submit") != None):
-        print(current_nfc, file=sys.stderr)
+    # If the value of the form is not none and they pressed submit, add nfc_id and default preferences to user
     if(request.form.get("submit") == "submit" and len(current_nfc) > 5):
         user = User.query.get(current_user.id)
         user.nfc_id = current_nfc
         preferences = Preferences(app1=True, app2=True, app3=True, app4=True, user=user)
         user.preferences = preferences
         db.session.add(preferences)
-        # print(current_user.preferences, file=sys.stderr)
-        # print(preferences, file=sys.stderr)
         db.session.commit()
         return jsonify({'redirect': url_for("landingpage")})
     elif(request.form.get("submit") == "submit" or request.form.get("pair") == "pair"):
         return jsonify({'redirect': url_for("nfc_update", nfc_var=current_nfc)})
-        # return render_template(
-        #     'settings.html',
-        #     nfc_var=current_nfc
-        # )
     else:
         return render_template(
             'settings.html',
             nfc_var=current_nfc
         )
-
 
 @app.route("/logout")
 @login_required
@@ -243,4 +229,3 @@ if __name__ == "main":
     sess = Session()
     sess.init_app(app)
     app.run(threaded=True)
-
