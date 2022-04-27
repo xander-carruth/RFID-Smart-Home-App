@@ -1,21 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:weight@100;200;300;400;500;600;700;800&display=swap");
-.profile-img
-{
-width: 500px;
-height: 650px;
-}
-.navi-right
-{
-text-align: right;
-display: block;
-float: right;
-}
-.navi-left
-{
-text-align: left;
-display: block;
-float: left;
-}
 .settings
 {
 padding-top: 2em;    
