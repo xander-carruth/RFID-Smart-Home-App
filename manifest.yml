@@ -1,0 +1,6 @@
+applications:
+ - name: Internet of Things Platform-3z
+   random-route: true
+   memory: 128M
+   dockerfile-run: "docker-compose.yml"
+  
