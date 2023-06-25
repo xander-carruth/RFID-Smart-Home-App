@@ -1,0 +1,4 @@
+# An RFID Based Smart Home
+**Credits to:** Timothy Boushell, Xander Carruth, and Arnab Datta
+
+This is the web app for a concept we envisioned of an RFID based smart home. In this smart home, users can scan their phones using an RFID scanner and the smart home devices will all change to fit the user's preset preferences. The web app allows users to set up an account, save and edit preferences, and connect a mobile device to their account. When preferences are updated, they are communicated to a smart home profile hosted on IBM Cloud using the MQTT Internet of Things protocol. In the initial prototype, whenever a user scans their phone on an RFID scanner connected to a Raspberry Pi, smart home devices throughout a room connected to a laptop using HASS.IO will be switched to the desired preference for that user. Please see the this document for more information.
